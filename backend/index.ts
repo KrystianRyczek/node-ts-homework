@@ -4,7 +4,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import dotenv from "dotenv";
 dotenv.config({ path: "../.env" });
 
-const port: string | undefined = process.env.PORT;
+const port: string = process.env.PORT || "3000";
 if (!port) {
   throw new Error("PORT environment variable is not defined");
 }

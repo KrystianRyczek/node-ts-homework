@@ -7,7 +7,7 @@ const http_1 = require("http");
 const routes_1 = __importDefault(require("./routes"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config({ path: "../.env" });
-const port = process.env.PORT;
+const port = process.env.PORT || "3000";
 if (!port) {
     throw new Error("PORT environment variable is not defined");
 }
