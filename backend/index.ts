@@ -1,13 +1,20 @@
-import { createServer } from 'http';
+import { createServer } from "http";
+import routes from "./routes";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import dotenv from "dotenv";
+dotenv.config({ path: "../.env" });
 
-const PORT = 3000;
-const server = createServer(async (req, res) => {
-  res.end(JSON.stringify({ status: 'ok'}))
+const port: string | undefined = process.env.PORT;
+if (!port) {
+  throw new Error("PORT environment variable is not defined");
+}
+const serverPort: number = parseInt(port);
+const server = createServer(
+  async (req: IncomingMessage, res: ServerResponse) => {
+    routes(req, res);
+  }
+);
 
-  // 1. Obsługa endpointów
-  // 2. Proste serwowanie plików statycznych z katalogu frontend (np. pod ścieżką /static/)
-});
-
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+server.listen(serverPort, () => {
+  console.log(`Server running on http://localhost:${serverPort}`);
 });
