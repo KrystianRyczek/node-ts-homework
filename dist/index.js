@@ -1,12 +1,20 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const http_1 = require("http");
-const PORT = 3000;
+const routes_1 = __importDefault(require("./routes"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config({ path: "../.env" });
+const port = process.env.PORT;
+if (!port) {
+    throw new Error("PORT environment variable is not defined");
+}
+const serverPort = parseInt(port);
 const server = (0, http_1.createServer)(async (req, res) => {
-    res.end(JSON.stringify({ status: 'ok' }));
-    // 1. Obsługa endpointów
-    // 2. Proste serwowanie plików statycznych z katalogu frontend (np. pod ścieżką /static/)
+    (0, routes_1.default)(req, res);
 });
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+server.listen(serverPort, () => {
+    console.log(`Server running on http://localhost:${serverPort}`);
 });
