@@ -1,13 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCarsList = void 0;
-const db_1 = require("../db/db");
-const getCarsList = (res) => {
-    const cars = process.env.CARS_DB_NAME || "cars";
-    const carsDb = (0, db_1.getCollection)(res, cars);
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "application/json");
-    res.write(JSON.stringify(carsDb));
-    res.end();
+const controlers_1 = require("../db/controlers");
+const response_1 = require("../util/response");
+const getCarsList = async (res) => {
+    const cars = (await (0, controlers_1.getItems)("cars"));
+    if (cars.length === 0) {
+        const statusCode = 404;
+        const message = "No cars found";
+        (0, response_1.response)({ res, statusCode, message, data: undefined });
+    }
+    else {
+        const statusCode = 200;
+        const message = JSON.stringify(cars);
+        const data = cars;
+        (0, response_1.response)({ res, statusCode, message, data });
+    }
 };
 exports.getCarsList = getCarsList;

@@ -14,7 +14,7 @@ const sse_1 = require("./services/sse");
 const delete_user_1 = require("./services/delete-user");
 const delete_car_1 = require("./services/delete-car");
 const update_car_1 = require("./services/update-car");
-function routes(req, res) {
+async function routes(req, res) {
     var _a, _b, _c, _d;
     console.log(`Received ${req.method} request for ${req.url}`);
     if (req.method === "GET" && req.url === "/") {
@@ -34,7 +34,7 @@ function routes(req, res) {
     }
     const cookies = (0, auth_1.parseCookies)(req);
     const currentUser = cookies.token
-        ? (0, auth_1.getUserFromToken)(cookies.token)
+        ? await (0, auth_1.getUserFromToken)(cookies.token)
         : null;
     if (!currentUser) {
         res.statusCode = 401;
@@ -51,7 +51,7 @@ function routes(req, res) {
         }
         else if (req.method === "DELETE" &&
             (req.url === `/users/${currentUser.id}` || currentUser.role === "admin")) {
-            return (0, delete_user_1.deleteUser)(req, res);
+            return (0, delete_user_1.deleteUser)(req, res, currentUser);
         }
         else if (req.method === "GET" && req.url === "/cars") {
             return (0, get_cars_1.getCarsList)(res);

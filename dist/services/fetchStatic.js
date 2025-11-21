@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.jsFile = exports.cssFile = exports.htmlFile = void 0;
 const node_path_1 = __importDefault(require("node:path"));
 const fs_1 = __importDefault(require("fs"));
+const response_1 = require("../util/response");
 const htmlFile = (res) => {
     try {
         res.statusCode = 200;
@@ -31,9 +32,9 @@ const cssFile = (res) => {
         res.end();
     }
     catch (e) {
-        res.statusCode = 500;
-        res.write("Internal server error!");
-        res.end();
+        const statusCode = 500;
+        const message = "Internal server error!";
+        (0, response_1.response)({ res, statusCode, message, data: undefined });
     }
 };
 exports.cssFile = cssFile;
@@ -46,9 +47,9 @@ const jsFile = (res) => {
         res.end();
     }
     catch (e) {
-        res.statusCode = 500;
-        res.write("Internal server error!");
-        res.end();
+        const statusCode = 500;
+        const message = "Internal server error!";
+        (0, response_1.response)({ res, statusCode, message, data: undefined });
     }
 };
 exports.jsFile = jsFile;

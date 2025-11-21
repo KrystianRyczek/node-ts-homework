@@ -64,12 +64,12 @@ async function checkAuth() {
     const res = await fetch("http://localhost:3000/users");
     if (res.status === 200) {
       setupSSE();
-      const data = await res.json();
-      if (Array.isArray(data)) {
+      const users = await res.json();
+      if (Array.isArray(users.data)) {
         // Założenie: konto admina znajduje się wśród użytkowników i ma role 'admin'
-        currentUser = data.find((u) => u.role === "admin") || null;
+        currentUser = users.data.find((u) => u.role === "admin") || null;
       } else {
-        currentUser = data;
+        currentUser = users.data;
       }
     } else {
       currentUser = null;
@@ -102,12 +102,12 @@ async function loadProfile() {
   try {
     const res = await fetch("http://localhost:3000/users");
     if (res.status === 200) {
-      const data = await res.json();
+      const users = await res.json();
       let profile;
-      if (Array.isArray(data)) {
-        profile = data.find((u) => u.role === "admin") || null;
+      if (Array.isArray(users.data)) {
+        profile = users.data.find((u) => u.role === "admin") || null;
       } else {
-        profile = data;
+        profile = users.data;
       }
       if (profile) {
         document.getElementById(
@@ -128,16 +128,17 @@ async function loadCars() {
     const res = await fetch("http://localhost:3000/cars");
     if (res.status === 200) {
       const cars = await res.json();
+      console.log("Loaded cars:", cars);
       let html = "";
       if (cars.length === 0) {
         html = "Brak samochodów.";
       } else {
-        cars.forEach((car) => {
+        cars.data.forEach((car) => {
           html += `<div class="car-item">
                      <strong>ID:</strong> ${car.id} |
                      <strong>Model:</strong> ${car.model} |
                      <strong>Cena:</strong> ${car.price} |
-                     <strong>Właściciel:</strong> ${car.ownerId}
+                     <strong>Właściciel:</strong> ${car.ownerid}
                    </div>`;
         });
       }

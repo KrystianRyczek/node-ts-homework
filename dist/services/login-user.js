@@ -6,40 +6,39 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.loginUser = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const auth_1 = require("../util/auth");
-const db_1 = require("../db/db");
+const controlers_1 = require("../db/controlers");
+const response_1 = require("../util/response");
 const loginUser = (req, res) => {
-    const users = process.env.USERS_DB_NAME || "users";
     let rowBody = "";
     req.on("data", (chunk) => {
         rowBody += chunk;
     });
-    req.on("end", () => {
+    req.on("end", async () => {
         const body = JSON.parse(rowBody);
         if (!body.username || !body.password) {
-            res.statusCode = 400;
-            res.write(JSON.stringify({ error: "Username and password are required" }));
-            res.end();
-            return;
+            const statusCode = 400;
+            const message = "Username and password are required";
+            (0, response_1.response)({ res, statusCode, message, data: undefined });
+        }
+        const user = (await (0, controlers_1.getItemByProperty)("users", "username", body.username));
+        if (user.length === 0) {
+            const statusCode = 401;
+            const message = "User credentials are invalid";
+            (0, response_1.response)({ res, statusCode, message, data: undefined });
         }
         else {
-            const userDb = (0, db_1.getCollection)(res, users);
-            const user = userDb.find((user) => user.username === body.username);
-            const passwordMatch = user
-                ? bcrypt_1.default.compareSync(body.password, user.password)
-                : false;
-            if (user && passwordMatch) {
-                const token = (0, auth_1.generateToken)(user.id);
-                (0, auth_1.setAuthCookie)(res, token);
-                res.statusCode = 200;
-                res.setHeader("Content-Type", "application/json");
-                res.write(JSON.stringify({ message: "Login successful" }));
-                res.end();
+            const passwordMatch = bcrypt_1.default.compareSync(body.password, user[0].password);
+            if (!passwordMatch) {
+                const statusCode = 401;
+                const message = "User credentials are invalid";
+                (0, response_1.response)({ res, statusCode, message, data: undefined });
             }
             else {
-                res.statusCode = 401;
-                res.setHeader("Content-Type", "application/json");
-                res.write(JSON.stringify({ error: "Invalid username or password" }));
-                res.end();
+                const token = (0, auth_1.generateToken)(`${user[0].id}`);
+                (0, auth_1.setAuthCookie)(res, token);
+                const statusCode = 200;
+                const message = "Login successful";
+                (0, response_1.response)({ res, statusCode, message, data: undefined });
             }
         }
     });

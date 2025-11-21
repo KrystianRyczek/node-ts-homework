@@ -1,50 +1,41 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buyCar = void 0;
-const db_1 = require("../db/db");
 const sse_1 = require("./sse");
-const buyCar = (req, res, currentUser) => {
+const controlers_1 = require("../db/controlers");
+const response_1 = require("../util/response");
+const buyCar = async (req, res, currentUser) => {
     var _a;
-    const users = process.env.USERS_DB_NAME || "users";
-    const cars = process.env.CARS_DB_NAME || "cars";
-    const carId = (_a = req.url) === null || _a === void 0 ? void 0 : _a.split("/")[2];
-    const carsDb = (0, db_1.getCollection)(res, cars);
-    const carIndex = carsDb.findIndex((car) => car.id === carId);
-    if (carIndex === -1) {
-        res.statusCode = 404;
-        res.setHeader("Content-Type", "application/json");
-        res.write(JSON.stringify({ error: "Car not found" }));
-        res.end();
-        return;
+    const carId = Number((_a = req.url) === null || _a === void 0 ? void 0 : _a.split("/")[2]);
+    const soldCar = (await (0, controlers_1.getItemByProperty)("cars", "id", carId));
+    if (soldCar.length === 0) {
+        const statusCode = 404;
+        const message = "Car not found";
+        (0, response_1.response)({ res, statusCode, message, data: undefined });
+    }
+    if (currentUser.balance < soldCar[0].price) {
+        const statusCode = 400;
+        const message = "Insufficient balance";
+        (0, response_1.response)({ res, statusCode, message, data: undefined });
     }
     else {
-        const userDb = (0, db_1.getCollection)(res, users);
-        const userIndex = userDb.findIndex((user) => user.id === currentUser.id);
-        if (userIndex === -1) {
-            res.statusCode = 404;
-            res.setHeader("Content-Type", "application/json");
-            res.write(JSON.stringify({ error: "User not found" }));
-            res.end();
-            return;
-        }
-        else {
-            const availableCars = carsDb.filter((car) => car.id !== carId);
-            (0, db_1.collectionsUpdate)(res, cars, availableCars);
-            const updatedUser = [...userDb];
-            updatedUser[userIndex].balance -= carsDb[carIndex].price;
-            (0, db_1.collectionsUpdate)(res, users, updatedUser);
-            const newEvent = {
-                carId: carsDb[carIndex].id,
-                ownerId: currentUser.id,
-                model: carsDb[carIndex].model,
-                event: "sell",
-            };
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
-            res.write(JSON.stringify({ message: "Car purchased successfully" }));
-            res.end();
-            sse_1.buyEventEmiter.emit("buyCar", newEvent);
-            return;
+        if (currentUser) {
+            const updatedUser = await (0, controlers_1.editItem)("users", "id", currentUser.id, {
+                balance: currentUser.balance - soldCar[0].price,
+            });
+            if (updatedUser && updatedUser.length > 0) {
+                const deletedCars = await (0, controlers_1.deleteItem)("cars", carId);
+                const newEvent = {
+                    carId: soldCar[0].id,
+                    buyerId: currentUser.id,
+                    model: soldCar[0].model,
+                    event: "sell",
+                };
+                const statusCode = 200;
+                const message = "Car purchased successfully";
+                sse_1.buyEventEmiter.emit("buyCar", newEvent);
+                (0, response_1.response)({ res, statusCode, message, data: undefined });
+            }
         }
     }
 };

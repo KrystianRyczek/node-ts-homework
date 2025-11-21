@@ -1,32 +1,38 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Car, User } from "../types";
-import { collectionsUpdate, getCollection } from "../db/db";
+import { deleteItem, getItemByProperty } from "../db/controlers";
+import { response } from "../util/response";
 
-export const deleteCar = (
+export const deleteCar = async (
   req: IncomingMessage,
   res: ServerResponse,
   currentUser: User
 ) => {
   const cars = process.env.CARS_DB_NAME || "cars";
-  const carId: string | undefined = req.url?.split("/")[2];
-  const carsDb: Car[] = getCollection(res, cars) as Car[];
-  const carIndex: number = carsDb.findIndex(
-    (car) => car.id === carId && car.ownerId === currentUser.id
-  );
-
-  if (carIndex === -1 && currentUser.role !== "admin") {
-    res.statusCode = 403;
-    res.setHeader("Content-Type", "application/json");
-    res.write(JSON.stringify({ error: "Access denied" }));
-    res.end();
-    return;
+  const carId: number | undefined = Number(req.url?.split("/")[2]);
+  const carToDelete = (await getItemByProperty(cars, "id", carId)) as Car[];
+  if (carToDelete.length === 0) {
+    const statusCode = 404;
+    const message = "Car not found";
+    response({ res, statusCode, message, data: undefined });
+  }
+  if (
+    currentUser.role !== "admin" &&
+    currentUser.id !== carToDelete[0].ownerid
+  ) {
+    const statusCode = 403;
+    const message = "Forbidden: You don't have permission to delete this car";
+    response({ res, statusCode, message, data: undefined });
   } else {
-    const updatedCars: Car[] = carsDb.filter((car) => car.id !== carId);
-    collectionsUpdate(res, cars, updatedCars);
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "application/json");
-    res.write(JSON.stringify({ message: "Car deleted successfully" }));
-    res.end();
-    return;
+    const deletedCars = await deleteItem(cars, carId as number);
+    if (deletedCars && deletedCars.length > 0) {
+      const statusCode = 200;
+      const message = "Car deleted successfully";
+      response({ res, statusCode, message, data: undefined });
+    } else {
+      const statusCode = 409;
+      const message = "Car not found";
+      response({ res, statusCode, message, data: undefined });
+    }
   }
 };

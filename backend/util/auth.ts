@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
-import fs from "fs";
 import dotenv from "dotenv";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import bcrypt from "bcrypt";
 dotenv.config({ path: "../.env" });
-import { User } from "../types";
+import { Car, User } from "../types";
+import { getItemByProperty } from "../db/controlers";
 
 export function generateToken(id: string): string {
   const payload = { id };
@@ -19,21 +19,21 @@ export function generateToken(id: string): string {
   return token;
 }
 
-export function getUserFromToken(token: string): User | null {
+export async function getUserFromToken(token: string): Promise<User | null> {
   const secret = process.env.SECRET;
   if (!secret) {
     throw new Error("SECRET environment variable is not defined");
   }
-  const { id, ...rest } = jwt.verify(token, secret) as { id: string };
-  const userDb: User[] = JSON.parse(
-    fs.readFileSync("../db/users.json", "utf8")
-  );
-  const user = userDb.find((user: User) => user.id === id) || null;
+  const { id, ...rest } = jwt.verify(token, secret) as { id: number };
+  const user = await getItemByProperty("users", "id", id);
 
-  return user;
+  if (user) {
+    return user[0] as User;
+  }
+  return null;
 }
 
-export function setAuthCookie(res: ServerResponse, token: string) {
+export function setAuthCookie(res: ServerResponse, token: string): void {
   res.setHeader("Set-Cookie", `token=${token}; HttpOnly; secure; Max-Age=600`);
 }
 
@@ -59,7 +59,7 @@ export function hashPassword(password: string): string {
   }
 }
 
-export function clearAuthCookie(res: ServerResponse) {
+export function clearAuthCookie(res: ServerResponse): void {
   res.setHeader(
     "Set-Cookie",
     `token=; HttpOnly; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`

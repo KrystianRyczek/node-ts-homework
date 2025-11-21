@@ -1,20 +1,28 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { User } from "../types";
-import { getCollection } from "../db/db";
+import { getItems } from "../db/controlers";
+import { response } from "../util/response";
 
-export const getCurrentUser = (
+export const getCurrentUser = async (
   req: IncomingMessage,
   res: ServerResponse,
   currentUser: User
 ) => {
-  const users = process.env.USERS_DB_NAME || "users";
-  res.setHeader("Content-Type", "application/json");
-  res.statusCode = 200;
-  if (currentUser.role === "admin") {
-    const userDb: User[] = getCollection(res, users) as User[];
-    res.write(JSON.stringify(userDb));
+  if (currentUser.role !== "admin") {
+    const statusCode = 200;
+    const message = JSON.stringify(currentUser);
+    const data = currentUser;
+    response({ res, statusCode, message, data });
   } else {
-    res.write(JSON.stringify(currentUser));
+    const users = await getItems("users");
+    if (users && users.length > 0) {
+      const statusCode = 200;
+      const message = JSON.stringify(users);
+      response({ res, statusCode, message, data: undefined });
+    } else {
+      const statusCode = 404;
+      const message = "No users found";
+      response({ res, statusCode, message, data: undefined });
+    }
   }
-  res.end();
 };

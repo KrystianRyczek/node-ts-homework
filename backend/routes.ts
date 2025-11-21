@@ -14,7 +14,10 @@ import { deleteUser } from "./services/delete-user";
 import { deleteCar } from "./services/delete-car";
 import { updateCar } from "./services/update-car";
 
-export default function routes(req: IncomingMessage, res: ServerResponse) {
+export default async function routes(
+  req: IncomingMessage,
+  res: ServerResponse
+) {
   console.log(`Received ${req.method} request for ${req.url}`);
   if (req.method === "GET" && req.url === "/") {
     return htmlFile(res);
@@ -30,7 +33,7 @@ export default function routes(req: IncomingMessage, res: ServerResponse) {
   const cookies: { [key: string]: string } = parseCookies(req);
 
   const currentUser: User | null = cookies.token
-    ? getUserFromToken(cookies.token)
+    ? await getUserFromToken(cookies.token)
     : null;
   if (!currentUser) {
     res.statusCode = 401;
@@ -46,7 +49,7 @@ export default function routes(req: IncomingMessage, res: ServerResponse) {
       req.method === "DELETE" &&
       (req.url === `/users/${currentUser.id}` || currentUser.role === "admin")
     ) {
-      return deleteUser(req, res);
+      return deleteUser(req, res, currentUser);
     } else if (req.method === "GET" && req.url === "/cars") {
       return getCarsList(res);
     } else if (req.method === "POST" && req.url === "/cars") {

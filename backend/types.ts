@@ -1,5 +1,5 @@
 export interface User {
-  id: string;
+  id: number;
   username: string;
   password: string; // Dla uproszczenia przechowujemy hasło w postaci jawnej (w praktyce należy stosować hashowanie)
   role: "admin" | "user";
@@ -8,17 +8,17 @@ export interface User {
 }
 
 export interface Car {
-  id: string;
+  id: number;
   model: string;
   price: number;
-  ownerId: string;
+  ownerid: number;
 }
 export interface Body {
   [key: string]: string;
 }
 export interface EventLog {
-  carId: string;
-  ownerId: string;
+  carId: number;
+  buyerId: number;
   model: string;
   event: "add" | "sell";
 }

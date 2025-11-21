@@ -1,52 +1,56 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Car, User, Body } from "../types";
-import { collectionsUpdate, getCollection } from "../db/db";
+import { editItem, getItemByProperty } from "../db/controlers";
+import { response } from "../util/response";
 
 export const updateCar = (
   req: IncomingMessage,
   res: ServerResponse,
   currentUser: User
 ) => {
-  const cars = process.env.CARS_DB_NAME || "cars";
-  const carId: string | undefined = req.url?.split("/")[2];
-  const carsDb: Car[] = getCollection(res, cars) as Car[];
-  const carIndex: number = carsDb.findIndex(
-    (car) => car.id === carId && car.ownerId === currentUser.id
-  );
-
-  if (carIndex === -1 && currentUser.role !== "admin") {
-    res.statusCode = 403;
-    res.setHeader("Content-Type", "application/json");
-    res.write(JSON.stringify({ error: "Access denied" }));
-    res.end();
-    return;
-  } else {
-    let rowBody: string = "";
-    req.on("data", (chunk) => {
-      rowBody += chunk;
-    });
-    req.on("end", () => {
-      const body: Body = JSON.parse(rowBody);
-      if (!body.model || !body.price) {
-        res.statusCode = 400;
-        res.write(JSON.stringify({ error: "Model and price are required" }));
-        res.end();
-        return;
+  let rowBody: string = "";
+  req.on("data", (chunk) => {
+    rowBody += chunk;
+  });
+  req.on("end", async () => {
+    const body: Body = JSON.parse(rowBody);
+    if (!body.model || !body.price) {
+      const statusCode = 400;
+      const message = "Model and price are required";
+      response({ res, statusCode, message, data: undefined });
+    } else {
+      const carId: number | undefined = Number(req.url?.split("/")[2]);
+      const cartoEdit = (await getItemByProperty("cars", "id", carId)) as Car[];
+      if (cartoEdit.length === 0) {
+        const statusCode = 404;
+        const message = "Car not found";
+        response({ res, statusCode, message, data: undefined });
       } else {
-        const carIndex: number = carsDb.findIndex((car) => car.id === carId);
-        const updatedCar: Car = { ...carsDb[carIndex], ...body };
-        const updatedCarsDb: Car[] = [...carsDb];
-        updatedCarsDb[carIndex] = updatedCar;
-        collectionsUpdate(res, cars, updatedCarsDb);
-        res.statusCode = 200;
-        res.write(
-          JSON.stringify({
-            message: "Car updated successfully",
-          })
-        );
-        res.end();
+        if (
+          currentUser.role !== "admin" &&
+          currentUser.id !== cartoEdit[0].ownerid
+        ) {
+          const statusCode = 403;
+          const message = "Access denied";
+          response({ res, statusCode, message, data: undefined });
+        } else {
+          const editedCar = await editItem("cars", "id", carId, {
+            model: body.model,
+            price: Number(body.price),
+          });
+          if (editedCar && editedCar.length > 0) {
+            const statusCode = 200;
+            const message = "Car updated successfully";
+            response({ res, statusCode, message, data: undefined });
+          } else {
+            const statusCode = 500;
+            const message = "Failed to update car";
+            response({ res, statusCode, message, data: undefined });
+            return;
+          }
+        }
       }
-    });
-    return;
-  }
+    }
+  });
+  return;
 };

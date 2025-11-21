@@ -10,10 +10,10 @@ exports.parseCookies = parseCookies;
 exports.hashPassword = hashPassword;
 exports.clearAuthCookie = clearAuthCookie;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const fs_1 = __importDefault(require("fs"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 dotenv_1.default.config({ path: "../.env" });
+const controlers_1 = require("../db/controlers");
 function generateToken(id) {
     const payload = { id };
     const secret = process.env.SECRET;
@@ -25,15 +25,17 @@ function generateToken(id) {
     });
     return token;
 }
-function getUserFromToken(token) {
+async function getUserFromToken(token) {
     const secret = process.env.SECRET;
     if (!secret) {
         throw new Error("SECRET environment variable is not defined");
     }
     const { id, ...rest } = jsonwebtoken_1.default.verify(token, secret);
-    const userDb = JSON.parse(fs_1.default.readFileSync("../db/users.json", "utf8"));
-    const user = userDb.find((user) => user.id === id) || null;
-    return user;
+    const user = await (0, controlers_1.getItemByProperty)("users", "id", id);
+    if (user) {
+        return user[0];
+    }
+    return null;
 }
 function setAuthCookie(res, token) {
     res.setHeader("Set-Cookie", `token=${token}; HttpOnly; secure; Max-Age=600`);

@@ -2,44 +2,45 @@ import { type IncomingMessage, type ServerResponse } from "node:http";
 import bcrypt from "bcrypt";
 import { generateToken, setAuthCookie } from "../util/auth";
 import { Body, User } from "../types";
-import { getCollection } from "../db/db";
+import { getItemByProperty } from "../db/controlers";
+import { response } from "../util/response";
 
 export const loginUser = (req: IncomingMessage, res: ServerResponse) => {
-  const users = process.env.USERS_DB_NAME || "users";
   let rowBody: string = "";
   req.on("data", (chunk) => {
     rowBody += chunk;
   });
-  req.on("end", () => {
+  req.on("end", async () => {
     const body: Body = JSON.parse(rowBody);
     if (!body.username || !body.password) {
-      res.statusCode = 400;
-      res.write(
-        JSON.stringify({ error: "Username and password are required" })
-      );
-      res.end();
-      return;
+      const statusCode = 400;
+      const message = "Username and password are required";
+      response({ res, statusCode, message, data: undefined });
+    }
+    const user = (await getItemByProperty(
+      "users",
+      "username",
+      body.username
+    )) as User[];
+    if (user.length === 0) {
+      const statusCode = 401;
+      const message = "User credentials are invalid";
+      response({ res, statusCode, message, data: undefined });
     } else {
-      const userDb: User[] = getCollection(res, users) as User[];
-      const user: User | undefined = userDb.find(
-        (user: { username: string; password: string }): boolean =>
-          user.username === body.username
+      const passwordMatch: boolean = bcrypt.compareSync(
+        body.password,
+        user[0].password
       );
-      const passwordMatch: boolean = user
-        ? bcrypt.compareSync(body.password, user.password)
-        : false;
-      if (user && passwordMatch) {
-        const token: string = generateToken(user.id);
-        setAuthCookie(res, token);
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.write(JSON.stringify({ message: "Login successful" }));
-        res.end();
+      if (!passwordMatch) {
+        const statusCode = 401;
+        const message = "User credentials are invalid";
+        response({ res, statusCode, message, data: undefined });
       } else {
-        res.statusCode = 401;
-        res.setHeader("Content-Type", "application/json");
-        res.write(JSON.stringify({ error: "Invalid username or password" }));
-        res.end();
+        const token: string = generateToken(`${user[0].id}`);
+        setAuthCookie(res, token);
+        const statusCode = 200;
+        const message = "Login successful";
+        response({ res, statusCode, message, data: undefined });
       }
     }
   });
