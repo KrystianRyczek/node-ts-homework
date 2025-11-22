@@ -1,10 +1,18 @@
 [
-    {
-      "id": "admin001",
-      "username": "admin",
-      "password": "admin123",
-      "role": "admin",
-      "balance": 10000
-    }
-  ]
-  
+  {
+    "id": "96678215-2fe0-470d-aeef-1fcbe305ea43",
+    "username": "admin",
+    "password": "$2b$10$UEtQwbE2vPh0TgVLbdialO3dS.A6NLwidBgvieTvMmOXfXUcih3Ju",
+    "role": "admin",
+    "balance": 9778,
+    "refreshToken": []
+  },
+  {
+    "id": "c05fbcb9-22e0-46b8-a052-8aa8c76c0990",
+    "username": "admin9",
+    "password": "$2b$10$Owly2U.HemxhOSw9geY7B.oUyNdSHu/hsUMFJvPVHDBr.ydoCx6de",
+    "role": "user",
+    "balance": 6762,
+    "refreshToken": []
+  }
+]
