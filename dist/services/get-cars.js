@@ -2,19 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCarsList = void 0;
 const controlers_1 = require("../db/controlers");
-const response_1 = require("../util/response");
-const getCarsList = async (res) => {
-    const cars = (await (0, controlers_1.getItems)("cars"));
-    if (cars.length === 0) {
-        const statusCode = 404;
-        const message = "No cars found";
-        (0, response_1.response)({ res, statusCode, message, data: undefined });
+const getCarsList = async (req, res, next) => {
+    try {
+        const cars = await (0, controlers_1.getItems)("cars");
+        if (cars && cars.length > 0) {
+            res.status(200).json(cars);
+            return;
+        }
+        throw new Error("No cars found");
     }
-    else {
-        const statusCode = 200;
-        const message = JSON.stringify(cars);
-        const data = cars;
-        (0, response_1.response)({ res, statusCode, message, data });
+    catch (error) {
+        error.name = "GetCarsFailed";
+        return next(error);
     }
 };
 exports.getCarsList = getCarsList;

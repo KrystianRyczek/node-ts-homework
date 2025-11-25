@@ -1,38 +1,37 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
+import { Request, Response, NextFunction } from "express";
 import type { User } from "../types";
 import { addNewItem } from "../db/controlers";
-import { response } from "../util/response";
 
-export const addNewCar = (
-  req: IncomingMessage,
-  res: ServerResponse,
-  currentUser: User
+export const addNewCar = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
-  let rawBody: string = "";
-  req.on("data", (chunk) => {
-    rawBody += chunk;
-  });
-  req.on("end", async () => {
-    const body = JSON.parse(rawBody);
-    if (!body.model && !body.price) {
-      const statusCode = 400;
-      const message = "Invalid car data";
-      response({ res, statusCode, message, data: undefined });
-    } else {
-      const newCar = await addNewItem("cars", {
-        model: body.model,
-        price: body.price,
-        ownerid: currentUser?.id ? currentUser.id : "",
-      });
-      if (newCar && newCar.length > 0) {
-        const statusCode = 201;
-        const message = "Car added successfully";
-        response({ res, statusCode, message, data: undefined });
-      } else {
-        const statusCode = 500;
-        const message = "Failed to add car";
-        response({ res, statusCode, message, data: undefined });
-      }
+  const currentUser: User = res.locals.user;
+  try {
+    if (!req.body.model || !req.body.price) {
+      throw new Error("Car model and price are required");
     }
-  });
+  } catch (error: any) {
+    console.log(error);
+    error.name = "BodyData";
+    return next(error);
+  }
+  try {
+    const newCar = await addNewItem("cars", {
+      model: req.body.model,
+      price: req.body.price,
+      ownerid: currentUser?.id,
+    });
+    console.log("New car added:", newCar);
+    if (newCar && newCar.length > 0) {
+      res.status(201).json("Car added successfully");
+      return;
+    }
+    throw new Error("Failed to add car");
+  } catch (error: any) {
+    console.log(error);
+    error.name = "AddNewCarFailed";
+    return next(error);
+  }
 };

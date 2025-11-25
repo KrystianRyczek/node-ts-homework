@@ -1,10 +1,10 @@
-import type { IncomingMessage, ServerResponse } from "http";
+import type { Request, Response, NextFunction } from "express";
 import { EventLog } from "../types";
 import { EventEmitter } from "stream";
 
 export const buyEventEmiter = new EventEmitter();
 
-export const sseHandler = (req: IncomingMessage, res: ServerResponse) => {
+export const sseHandler = (req: Request, res: Response, next: NextFunction) => {
   res.setHeader("Content-Type", " text/event-stream");
   res.setHeader("Cache-control", " no-cache");
   res.setHeader("Connection", " keep-alive");

@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 dotenv.config({ path: "../.env" });
 import { Car, User } from "../types";
 import { getItemByProperty } from "../db/controlers";
+import { Request, Response, NextFunction } from "express";
 
 export function generateToken(id: string): string {
   const payload = { id };
@@ -33,11 +34,11 @@ export async function getUserFromToken(token: string): Promise<User | null> {
   return null;
 }
 
-export function setAuthCookie(res: ServerResponse, token: string): void {
+export function setAuthCookie(res: Response, token: string): void {
   res.setHeader("Set-Cookie", `token=${token}; HttpOnly; secure; Max-Age=600`);
 }
 
-export function parseCookies(req: IncomingMessage): Record<string, string> {
+export function parseCookies(req: Request): Record<string, string> {
   const cookieHeader = req.headers.cookie;
   const cookies: Record<string, string> = {};
 

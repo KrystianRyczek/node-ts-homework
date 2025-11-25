@@ -1,40 +1,39 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
-import type { User, Body } from "../types";
+import type { Request, Response, NextFunction } from "express";
+import type { User } from "../types";
 import { hashPassword } from "../util/auth";
 import { editItem } from "../db/controlers";
-import { response } from "../util/response";
 
-export const updateUser = (
-  req: IncomingMessage,
-  res: ServerResponse,
-  currentUser: User
+export const updateUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
-  let rowBody: string = "";
-  req.on("data", (chunk) => {
-    rowBody += chunk;
-  });
-  req.on("end", async () => {
-    const body: Body = JSON.parse(rowBody);
-    if (!body.password || !body.username) {
-      const statusCode = 400;
-      const message = "User name and password are required";
-      response({ res, statusCode, message, data: undefined });
-    } else {
-      if (currentUser.id) {
-        const editedUser = await editItem("users", "id", currentUser.id, {
-          username: body.username,
-          password: hashPassword(body.password),
-        });
-        if (editedUser && editedUser.length > 0) {
-          const statusCode = 200;
-          const message = "User updated successfully";
-          response({ res, statusCode, message, data: undefined });
-        } else {
-          const statusCode = 500;
-          const message = "Failed to update user";
-          response({ res, statusCode, message, data: undefined });
-        }
-      }
+  const currentUser: User = res.locals.user;
+  try {
+    if (!req.body.password || !req.body.username) {
+      throw new Error("User name and password are required");
     }
-  });
+  } catch (error: any) {
+    console.log(error);
+    error.name = "NoBodyData";
+    return next(error);
+  }
+  try {
+    if (currentUser.role === "admin" || currentUser.id === +req.params.id) {
+      const editedUser = await editItem("users", "id", +req.params.id, {
+        username: req.body.username,
+        password: hashPassword(req.body.password),
+      });
+      if (editedUser && editedUser.length > 0) {
+        res.status(200).json("User updated successfully");
+        return;
+      }
+      throw new Error("Failed to update user");
+    }
+    throw new Error("Access denied");
+  } catch (error: any) {
+    console.log(error);
+    error.name = "UpdateUserFailed";
+    return next(error);
+  }
 };

@@ -1,29 +1,27 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
+import type { Request, Response, NextFunction } from "express";
 import type { User } from "../types";
 import { deleteItem } from "../db/controlers";
-import { response } from "../util/response";
+// import { response } from "../util/response";
 
 export const deleteUser = async (
-  req: IncomingMessage,
-  res: ServerResponse,
-  currentUser: User
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
-  const users = process.env.USERS_DB_NAME || "users";
-  const userId: number = Number(req.url?.split("/")[2]);
-  if (currentUser.role !== "admin" && currentUser.id !== userId) {
-    const statusCode = 403;
-    const message = "Forbidden: You don't have permission to delete this user";
-    response({ res, statusCode, message, data: undefined });
-  } else {
-    const deletedUsers = await deleteItem(users, userId);
-    if (deletedUsers && deletedUsers.length > 0) {
-      const statusCode = 200;
-      const message = "User deleted successfully";
-      response({ res, statusCode, message, data: undefined });
-    } else {
-      const statusCode = 409;
-      const message = "User not found";
-      response({ res, statusCode, message, data: undefined });
+  const userid: number = Number(req.params.id);
+  const user: User = res.locals.user;
+  try {
+    if (user.role !== "admin" && user.id !== userid) {
+      const deletedUsers = await deleteItem("users", userid);
+      if (deletedUsers && deletedUsers.length > 0) {
+        res.status(200).json("User deleted successfully");
+        return;
+      }
+      throw new Error("Failed to delete user");
     }
+    throw new Error("Forbidden: You don't have permission to delete this user");
+  } catch (error: any) {
+    error.name = "DeleteUserFailed";
+    return next(error);
   }
 };

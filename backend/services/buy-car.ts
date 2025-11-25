@@ -1,49 +1,41 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
+import type { NextFunction, Request, Response } from "express";
 import type { Car, EventLog, User } from "../types";
 import { buyEventEmiter } from "./sse";
 import { deleteItem, editItem, getItemByProperty } from "../db/controlers";
-import { response } from "../util/response";
 
 export const buyCar = async (
-  req: IncomingMessage,
-  res: ServerResponse,
-  currentUser: User
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
-  const carId: number | undefined = Number(req.url?.split("/")[2]);
-  const soldCar = (await getItemByProperty("cars", "id", carId)) as Car[];
-  if (soldCar.length === 0) {
-    const statusCode = 404;
-    const message = "Car not found";
-    response({ res, statusCode, message, data: undefined });
-  }
-  if (currentUser.balance < soldCar[0].price) {
-    const statusCode = 400;
-    const message = "Insufficient balance";
-    response({ res, statusCode, message, data: undefined });
-  } else {
-    if (currentUser) {
-      const updatedUser = await editItem(
-        "users",
-        "id",
-        currentUser.id as number,
-        {
-          balance: currentUser.balance - soldCar[0].price,
-        }
-      );
+  try {
+    const carId: number = Number(req.params.id);
+    const currentUser: User = res.locals.user;
+    const soldCar = (await getItemByProperty("cars", "id", carId)) as Car[];
+    if (soldCar.length > 0 && currentUser.balance >= soldCar[0].price) {
+      const updatedUser = await editItem("users", "id", currentUser.id, {
+        balance: currentUser.balance - soldCar[0].price,
+      });
       if (updatedUser && updatedUser.length > 0) {
         const deletedCars = await deleteItem("cars", carId);
-
-        const newEvent: EventLog = {
-          carId: soldCar[0].id,
-          buyerId: currentUser.id,
-          model: soldCar[0].model,
-          event: "sell",
-        };
-        const statusCode = 200;
-        const message = "Car purchased successfully";
-        buyEventEmiter.emit("buyCar", newEvent);
-        response({ res, statusCode, message, data: undefined });
+        if (deletedCars && deletedCars.length > 0) {
+          const newEvent: EventLog = {
+            carId: soldCar[0].id,
+            buyerId: currentUser.id,
+            model: soldCar[0].model,
+            event: "sell",
+          };
+          buyEventEmiter.emit("buyCar", newEvent);
+          res.status(200).json("Car purchased successfully");
+          return;
+        }
+        throw new Error("Failed to purchase car");
       }
     }
+    throw new Error("Car not available or insufficient balance");
+  } catch (error: any) {
+    console.log(error);
+    error.name = "BuyCarFailed";
+    return next(error);
   }
 };

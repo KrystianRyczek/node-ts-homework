@@ -61,15 +61,15 @@ function renderNav() {
  */
 async function checkAuth() {
   try {
-    const res = await fetch("http://localhost:3000/users");
+    const res = await fetch("http://localhost:3000/api/users");
     if (res.status === 200) {
       setupSSE();
       const users = await res.json();
-      if (Array.isArray(users.data)) {
+      if (Array.isArray(users)) {
         // Założenie: konto admina znajduje się wśród użytkowników i ma role 'admin'
-        currentUser = users.data.find((u) => u.role === "admin") || null;
+        currentUser = users.find((u) => u.role === "admin") || null;
       } else {
-        currentUser = users.data;
+        currentUser = users;
       }
     } else {
       currentUser = null;
@@ -100,7 +100,7 @@ function showView(viewId) {
  */
 async function loadProfile() {
   try {
-    const res = await fetch("http://localhost:3000/users");
+    const res = await fetch("http://localhost:3000/api/users");
     if (res.status === 200) {
       const users = await res.json();
       let profile;
@@ -125,7 +125,7 @@ async function loadProfile() {
  */
 async function loadCars() {
   try {
-    const res = await fetch("http://localhost:3000/cars");
+    const res = await fetch("http://localhost:3000/api/cars");
     if (res.status === 200) {
       const cars = await res.json();
       console.log("Loaded cars:", cars);
@@ -133,7 +133,7 @@ async function loadCars() {
       if (cars.length === 0) {
         html = "Brak samochodów.";
       } else {
-        cars.data.forEach((car) => {
+        cars.forEach((car) => {
           html += `<div class="car-item">
                      <strong>ID:</strong> ${car.id} |
                      <strong>Model:</strong> ${car.model} |
@@ -164,7 +164,7 @@ function setupEventListeners() {
       e.preventDefault();
       const username = document.getElementById("loginUsername").value;
       const password = document.getElementById("loginPassword").value;
-      const res = await fetch("http://localhost:3000/login", {
+      const res = await fetch("http://localhost:3000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -187,7 +187,7 @@ function setupEventListeners() {
       e.preventDefault();
       const username = document.getElementById("regUsername").value;
       const password = document.getElementById("regPassword").value;
-      const res = await fetch("http://localhost:3000/register", {
+      const res = await fetch("http://localhost:3000/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -213,7 +213,7 @@ function setupEventListeners() {
       const newUsername = document.getElementById("newUsername").value;
       const newPassword = document.getElementById("newPassword").value;
       const userId = currentUser.id;
-      const res = await fetch(`http://localhost:3000/users/${userId}`, {
+      const res = await fetch(`http://localhost:3000/api/users/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: newUsername, password: newPassword }),
@@ -236,7 +236,7 @@ function setupEventListeners() {
       e.preventDefault();
       const model = document.getElementById("carModel").value;
       const price = parseFloat(document.getElementById("carPrice").value);
-      const res = await fetch("http://localhost:3000/cars", {
+      const res = await fetch("http://localhost:3000/api/cars", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ model, price }),
@@ -257,7 +257,7 @@ function setupEventListeners() {
     buyCarForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const carId = document.getElementById("buyCarId").value;
-      const res = await fetch(`http://localhost:3000/cars/${carId}/buy`, {
+      const res = await fetch(`http://localhost:3000/api/cars/${carId}/buy`, {
         method: "POST",
       });
       const data = await res.json();

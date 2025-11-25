@@ -27,8 +27,8 @@ export const addNewItem = async (
   const addedItem: User[] | Car[] = await sql`INSERT INTO ${sql(
     tableName
   )} ${sql(item, propertysArr)} RETURNING *;`;
-
-  if (addedItem.length === 0) {
+  console.log("Added item:", addedItem);
+  if (addedItem.length > 0) {
     return addedItem;
   } else {
     return null;
@@ -50,9 +50,7 @@ export const getItemByProperty = async (
 };
 
 export const getItems = async (tableName: string) => {
-  const items: User[] | Car[] = await sql`SELECT * FROM ${sql(
-    tableName
-  )} RETURNING *;`;
+  const items: User[] | Car[] = await sql`SELECT * FROM ${sql(tableName)};`;
   if (items.length > 0) {
     return items as User[] | Car[];
   }

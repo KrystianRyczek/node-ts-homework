@@ -1,56 +1,48 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
-import type { Car, User, Body } from "../types";
+import type { Request, Response, NextFunction } from "express";
+import type { Car, User } from "../types";
 import { editItem, getItemByProperty } from "../db/controlers";
-import { response } from "../util/response";
 
-export const updateCar = (
-  req: IncomingMessage,
-  res: ServerResponse,
-  currentUser: User
+export const updateCar = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
-  let rowBody: string = "";
-  req.on("data", (chunk) => {
-    rowBody += chunk;
-  });
-  req.on("end", async () => {
-    const body: Body = JSON.parse(rowBody);
-    if (!body.model || !body.price) {
-      const statusCode = 400;
-      const message = "Model and price are required";
-      response({ res, statusCode, message, data: undefined });
-    } else {
-      const carId: number | undefined = Number(req.url?.split("/")[2]);
-      const cartoEdit = (await getItemByProperty("cars", "id", carId)) as Car[];
-      if (cartoEdit.length === 0) {
-        const statusCode = 404;
-        const message = "Car not found";
-        response({ res, statusCode, message, data: undefined });
-      } else {
-        if (
-          currentUser.role !== "admin" &&
-          currentUser.id !== cartoEdit[0].ownerid
-        ) {
-          const statusCode = 403;
-          const message = "Access denied";
-          response({ res, statusCode, message, data: undefined });
-        } else {
-          const editedCar = await editItem("cars", "id", carId, {
-            model: body.model,
-            price: Number(body.price),
-          });
-          if (editedCar && editedCar.length > 0) {
-            const statusCode = 200;
-            const message = "Car updated successfully";
-            response({ res, statusCode, message, data: undefined });
-          } else {
-            const statusCode = 500;
-            const message = "Failed to update car";
-            response({ res, statusCode, message, data: undefined });
-            return;
-          }
-        }
-      }
+  console.log("Update car service");
+  const carId = req.params.id;
+  const currentUser: User = res.locals.user;
+  try {
+    if (!req.body.model || !req.body.price) {
+      throw new Error("Car model and price are required");
     }
-  });
-  return;
+  } catch (error: any) {
+    error.name = "NoBodyData";
+    return next(error);
+  }
+  try {
+    const carToUpdate = (await getItemByProperty("cars", "id", +carId)) as
+      | Car[]
+      | null;
+    if (carToUpdate && carToUpdate.length > 0) {
+      if (
+        currentUser.role === "admin" ||
+        currentUser.id === +carToUpdate[0].ownerid
+      ) {
+        const editedCar = await editItem("cars", "id", +carId, {
+          model: req.body.model,
+          price: req.body.price,
+        });
+        if (editedCar && editedCar.length > 0) {
+          res.status(200).json("Car updated successfully");
+          return;
+        }
+        throw new Error("Car update failed");
+      }
+      throw new Error("Access denied");
+    }
+    throw new Error("Car not found");
+  } catch (error: any) {
+    console.log(error);
+    error.name = "UpdateCarFailed";
+    return next(error);
+  }
 };

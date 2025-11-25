@@ -1,18 +1,20 @@
-import type { ServerResponse } from "node:http";
-import { Car } from "../types";
+import type { Request, Response, NextFunction } from "express";
 import { getItems } from "../db/controlers";
-import { response } from "../util/response";
 
-export const getCarsList = async (res: ServerResponse) => {
-  const cars = (await getItems("cars")) as Car[];
-  if (cars.length === 0) {
-    const statusCode = 404;
-    const message = "No cars found";
-    response({ res, statusCode, message, data: undefined });
-  } else {
-    const statusCode = 200;
-    const message = JSON.stringify(cars);
-    const data = cars;
-    response({ res, statusCode, message, data });
+export const getCarsList = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const cars = await getItems("cars");
+    if (cars && cars.length > 0) {
+      res.status(200).json(cars);
+      return;
+    }
+    throw new Error("No cars found");
+  } catch (error: any) {
+    error.name = "GetCarsFailed";
+    return next(error);
   }
 };

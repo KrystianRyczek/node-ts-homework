@@ -25,7 +25,8 @@ exports.createCarsTable = createCarsTable;
 const addNewItem = async (tableName, item) => {
     const propertysArr = Object.keys(item);
     const addedItem = await (0, db_1.default) `INSERT INTO ${(0, db_1.default)(tableName)} ${(0, db_1.default)(item, propertysArr)} RETURNING *;`;
-    if (addedItem.length === 0) {
+    console.log("Added item:", addedItem);
+    if (addedItem.length > 0) {
         return addedItem;
     }
     else {
@@ -42,7 +43,7 @@ const getItemByProperty = async (tableName, property, value) => {
 };
 exports.getItemByProperty = getItemByProperty;
 const getItems = async (tableName) => {
-    const items = await (0, db_1.default) `SELECT * FROM ${(0, db_1.default)(tableName)} RETURNING *;`;
+    const items = await (0, db_1.default) `SELECT * FROM ${(0, db_1.default)(tableName)};`;
     if (items.length > 0) {
         return items;
     }
