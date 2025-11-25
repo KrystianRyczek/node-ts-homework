@@ -1,13 +1,19 @@
-import { createServer } from 'http';
+import dotenv from "dotenv";
+dotenv.config({ path: "../.env" });
 
-const PORT = 3000;
-const server = createServer(async (req, res) => {
-  res.end(JSON.stringify({ status: 'ok'}))
+import { app } from "./app";
 
-  // 1. Obsługa endpointów
-  // 2. Proste serwowanie plików statycznych z katalogu frontend (np. pod ścieżką /static/)
-});
+require("dotenv").config();
 
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+const { PORT: port } = process.env;
+const startServer = async () => {
+  try {
+    app.listen(port, () => {
+      console.log("Server running. Use our API on port:", port);
+    });
+  } catch (err) {
+    console.log(err);
+    process.exit(1);
+  }
+};
+startServer();
