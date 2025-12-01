@@ -1,12 +1,11 @@
+import type { Request, Response } from "express";
+import type { User } from "../types";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import type { IncomingMessage, ServerResponse } from "node:http";
 import bcrypt from "bcrypt";
-dotenv.config({ path: "../.env" });
-import { Car, User } from "../types";
 import { getUserById } from "../db/controlers";
 
-import { Request, Response, NextFunction } from "express";
+dotenv.config({ path: "../.env" });
 
 export function generateToken(id: string): string {
   const payload = { id };
@@ -27,10 +26,7 @@ export async function getUserFromToken(token: string): Promise<User | null> {
     throw new Error("SECRET environment variable is not defined");
   }
   const { id, ...rest } = jwt.verify(token, secret) as { id: number };
-  console.log("Received ID:", id);
-  const user = await getUserById("users", "id", id);
-
-  console.log("User from token:", user);
+  const user = await getUserById(id);
   if (user) {
     return user;
   }
@@ -63,7 +59,7 @@ export function hashPassword(password: string): string {
   }
 }
 
-export function clearAuthCookie(res: ServerResponse): void {
+export function clearAuthCookie(res: Response): void {
   res.setHeader(
     "Set-Cookie",
     `token=; HttpOnly; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`

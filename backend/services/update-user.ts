@@ -14,13 +14,12 @@ export const updateUser = async (
       throw new Error("User name and password are required");
     }
   } catch (error: any) {
-    console.log(error);
     error.name = "NoBodyData";
     return next(error);
   }
   try {
     if (currentUser.role === "admin" || currentUser.id === +req.params.id) {
-      const editedUser = await editUser(+req.params.id, {
+      const editedUser: User | null = await editUser(+req.params.id, {
         username: req.body.username,
         password: hashPassword(req.body.password),
       });
@@ -32,7 +31,6 @@ export const updateUser = async (
     }
     throw new Error("Access denied");
   } catch (error: any) {
-    console.log(error);
     error.name = "UpdateUserFailed";
     return next(error);
   }

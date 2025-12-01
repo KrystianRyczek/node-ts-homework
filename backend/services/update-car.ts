@@ -7,7 +7,6 @@ export const updateCar = async (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("Update car service");
   const carId = req.params.id;
   const currentUser: User = res.locals.user;
   try {
@@ -19,13 +18,13 @@ export const updateCar = async (
     return next(error);
   }
   try {
-    const carToUpdate = (await getCarById(+carId)) as Car | null;
+    const carToUpdate: Car | null = await getCarById(+carId);
     if (carToUpdate) {
       if (
         currentUser.role === "admin" ||
         currentUser.id === +carToUpdate.ownerId
       ) {
-        const editedCar = await editCar(+carId, {
+        const editedCar: Car | null = await editCar(+carId, {
           model: req.body.model,
           price: req.body.price,
         });
@@ -39,7 +38,6 @@ export const updateCar = async (
     }
     throw new Error("Car not found");
   } catch (error: any) {
-    console.log(error);
     error.name = "UpdateCarFailed";
     return next(error);
   }

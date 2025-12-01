@@ -1,13 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCarById = exports.editCar = exports.createNewCar = exports.getCars = exports.getCarById = exports.deleteUserbyId = exports.editUser = exports.getUsers = exports.getUserById = exports.getUserByName = exports.createNewUser = void 0;
+const auth_1 = require("../util/auth");
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const createNewUser = async (newUser) => {
     const user = await prisma.user.create({
         data: {
             username: newUser.username,
-            password: newUser.password,
+            password: (0, auth_1.hashPassword)(newUser.password),
         },
     });
     if (user) {
@@ -16,29 +17,29 @@ const createNewUser = async (newUser) => {
     return null;
 };
 exports.createNewUser = createNewUser;
-const getUserByName = async (value) => {
-    const item = await prisma.user.findFirst({
+const getUserByName = async (userName) => {
+    const user = await prisma.user.findFirst({
         where: {
             username: {
-                equals: value,
+                equals: userName,
                 mode: "insensitive",
             },
         },
     });
-    if (item) {
-        return item;
+    if (user) {
+        return user;
     }
     return null;
 };
 exports.getUserByName = getUserByName;
-const getUserById = async (tableName, property, value) => {
-    const item = await prisma.user.findFirst({
+const getUserById = async (userId) => {
+    const user = await prisma.user.findFirst({
         where: {
-            id: Number(value),
+            id: userId,
         },
     });
-    if (item) {
-        return item;
+    if (user) {
+        return user;
     }
     return null;
 };
@@ -77,7 +78,6 @@ const deleteUserbyId = async (userID) => {
 };
 exports.deleteUserbyId = deleteUserbyId;
 const getCarById = async (carID) => {
-    console.log("Fetching user by ID:", carID);
     const car = await prisma.cars.findFirst({
         where: {
             id: Number(carID),

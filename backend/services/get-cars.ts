@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import type { Car } from "../types";
 import { getCars } from "../db/controlers";
 
 export const getCarsList = async (
@@ -7,11 +8,9 @@ export const getCarsList = async (
   next: NextFunction
 ) => {
   try {
-    const cars = await getCars();
-    console.log(cars);
+    const cars: Car[] | null = await getCars();
     if (cars && cars.length > 0) {
-      res.status(200).json(cars);
-      return;
+      return res.status(200).json(cars);
     }
     throw new Error("No cars found");
   } catch (error: any) {

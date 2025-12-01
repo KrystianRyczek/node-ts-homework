@@ -3,7 +3,6 @@ import usersRouter from "./routes/users";
 import authUsersRouter from "./routes/authUsers";
 import authCarRouter from "./routes/authCars";
 import sse from "./routes/sse";
-// import JWTStrategy from './config/jwt.js';
 import authMiddleware from "./middlewares/jwt.js";
 export const app = express();
 app.use(express.json());

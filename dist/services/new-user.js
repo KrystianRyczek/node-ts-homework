@@ -23,18 +23,18 @@ const addNewUser = async (req, res, next) => {
         }
     }
     catch (error) {
-        console.log(error);
         error.name = "OcupatedUserName";
         return next(error);
     }
     try {
         const password = (0, auth_1.hashPassword)(req.body.password);
-        const newUser = { ...req.body, password };
-        await (0, controlers_1.createNewUser)(newUser);
-        res.status(201).json("User created successfully");
+        const newUser = await (0, controlers_1.createNewUser)({ ...req.body, password });
+        if (newUser) {
+            return res.status(201).json("User created successfully");
+        }
+        throw new Error("Failed to create user");
     }
     catch (error) {
-        console.log(error);
         error.name = "AddNewUserFailed";
         next(error);
     }

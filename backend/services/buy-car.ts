@@ -11,14 +11,14 @@ export const buyCar = async (
   try {
     const carId: number = Number(req.params.id);
     const currentUser: User = res.locals.user;
-    const soldCar = (await getCarById(carId)) as Car | null;
+    const soldCar: Car | null = await getCarById(carId);
     if (soldCar && currentUser.balance >= soldCar.price) {
-      const updatedUser = await editUser(currentUser.id, {
+      const updatedUser: User | null = await editUser(currentUser.id, {
         balance: currentUser.balance - soldCar.price,
       });
       if (updatedUser) {
-        const deletedCars = await deleteCarById(carId);
-        if (deletedCars) {
+        const deletedCar: Car | null = await deleteCarById(carId);
+        if (deletedCar) {
           const newEvent: EventLog = {
             carId: soldCar.id,
             buyerId: currentUser.id,
@@ -34,7 +34,6 @@ export const buyCar = async (
     }
     throw new Error("Car not available any more or insufficient balance");
   } catch (error: any) {
-    console.log("buyCar", error.message);
     error.name = "BuyCarFailed";
     return next(error);
   }

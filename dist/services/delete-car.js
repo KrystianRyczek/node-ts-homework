@@ -11,8 +11,7 @@ const deleteCar = async (req, res, next) => {
             if (user.role !== "admin" && user.id !== carToDelete.ownerId) {
                 const deletedCars = await (0, controlers_1.deleteCarById)(carId);
                 if (deletedCars) {
-                    res.status(200).json("Car deleted successfully");
-                    return;
+                    return res.status(200).json("Car deleted successfully");
                 }
                 throw new Error("Failed to delete car");
             }

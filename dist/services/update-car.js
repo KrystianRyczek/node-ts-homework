@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateCar = void 0;
 const controlers_1 = require("../db/controlers");
 const updateCar = async (req, res, next) => {
-    console.log("Update car service");
     const carId = req.params.id;
     const currentUser = res.locals.user;
     try {
@@ -16,7 +15,7 @@ const updateCar = async (req, res, next) => {
         return next(error);
     }
     try {
-        const carToUpdate = (await (0, controlers_1.getCarById)(+carId));
+        const carToUpdate = await (0, controlers_1.getCarById)(+carId);
         if (carToUpdate) {
             if (currentUser.role === "admin" ||
                 currentUser.id === +carToUpdate.ownerId) {
@@ -35,7 +34,6 @@ const updateCar = async (req, res, next) => {
         throw new Error("Car not found");
     }
     catch (error) {
-        console.log(error);
         error.name = "UpdateCarFailed";
         return next(error);
     }

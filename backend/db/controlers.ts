@@ -1,4 +1,3 @@
-import sql from "./db";
 import { hashPassword } from "../util/auth";
 import { Car, User } from "../types";
 import { PrismaClient } from "@prisma/client";
@@ -8,10 +7,10 @@ const prisma = new PrismaClient();
 export const createNewUser = async (newUser: {
   [key: string]: string | number;
 }) => {
-  const user = await prisma.user.create({
+  const user: User = await prisma.user.create({
     data: {
       username: newUser.username as string,
-      password: newUser.password as string,
+      password: hashPassword(newUser.password as string),
     },
   });
   if (user) {
@@ -20,39 +19,35 @@ export const createNewUser = async (newUser: {
   return null;
 };
 
-export const getUserByName = async (value: string | number) => {
-  const item = await prisma.user.findFirst({
+export const getUserByName = async (userName: string) => {
+  const user: User | null = await prisma.user.findFirst({
     where: {
       username: {
-        equals: value as string,
+        equals: userName,
         mode: "insensitive",
       },
     },
   });
-  if (item) {
-    return item;
+  if (user) {
+    return user;
   }
   return null;
 };
 
-export const getUserById = async (
-  tableName: string,
-  property: string,
-  value: string | number
-) => {
-  const item = await prisma.user.findFirst({
+export const getUserById = async (userId: number) => {
+  const user: User | null = await prisma.user.findFirst({
     where: {
-      id: Number(value),
+      id: userId,
     },
   });
-  if (item) {
-    return item;
+  if (user) {
+    return user;
   }
   return null;
 };
 
 export const getUsers = async () => {
-  const users = await prisma.user.findMany({});
+  const users: User[] = await prisma.user.findMany({});
   if (users) {
     return users;
   }
@@ -60,7 +55,7 @@ export const getUsers = async () => {
 };
 
 export const editUser = async (userId: number, updatedItem: Partial<User>) => {
-  const updatedUser = await prisma.user.update({
+  const updatedUser: User = await prisma.user.update({
     where: {
       id: userId,
     },
@@ -73,7 +68,7 @@ export const editUser = async (userId: number, updatedItem: Partial<User>) => {
 };
 
 export const deleteUserbyId = async (userID: number) => {
-  const deletedUser = await prisma.user.delete({
+  const deletedUser: User = await prisma.user.delete({
     where: {
       id: Number(userID),
     },
@@ -85,8 +80,7 @@ export const deleteUserbyId = async (userID: number) => {
 };
 
 export const getCarById = async (carID: number) => {
-  console.log("Fetching user by ID:", carID);
-  const car = await prisma.cars.findFirst({
+  const car: Car | null = await prisma.cars.findFirst({
     where: {
       id: Number(carID),
     },
@@ -98,7 +92,7 @@ export const getCarById = async (carID: number) => {
 };
 
 export const getCars = async () => {
-  const cars = await prisma.cars.findMany({});
+  const cars: Car[] = await prisma.cars.findMany({});
   if (cars) {
     return cars;
   }
@@ -107,7 +101,7 @@ export const getCars = async () => {
 export const createNewCar = async (newCar: {
   [key: string]: string | number;
 }) => {
-  const createdCar = await prisma.cars.create({
+  const createdCar: Car = await prisma.cars.create({
     data: {
       model: newCar.model as string,
       price: newCar.price as number,
@@ -121,7 +115,7 @@ export const createNewCar = async (newCar: {
 };
 
 export const editCar = async (carId: number, car: Partial<Car>) => {
-  const updatedCar = await prisma.cars.update({
+  const updatedCar: Car = await prisma.cars.update({
     where: {
       id: carId,
     },
@@ -134,7 +128,7 @@ export const editCar = async (carId: number, car: Partial<Car>) => {
 };
 
 export const deleteCarById = async (carId: number) => {
-  const deletedCar = await prisma.cars.delete({
+  const deletedCar: Car = await prisma.cars.delete({
     where: {
       id: Number(carId),
     },

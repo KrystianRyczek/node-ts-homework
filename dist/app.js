@@ -9,7 +9,6 @@ const users_1 = __importDefault(require("./routes/users"));
 const authUsers_1 = __importDefault(require("./routes/authUsers"));
 const authCars_1 = __importDefault(require("./routes/authCars"));
 const sse_1 = __importDefault(require("./routes/sse"));
-// import JWTStrategy from './config/jwt.js';
 const jwt_js_1 = __importDefault(require("./middlewares/jwt.js"));
 exports.app = (0, express_1.default)();
 exports.app.use(express_1.default.json());

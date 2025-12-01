@@ -12,8 +12,8 @@ exports.clearAuthCookie = clearAuthCookie;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
-dotenv_1.default.config({ path: "../.env" });
 const controlers_1 = require("../db/controlers");
+dotenv_1.default.config({ path: "../.env" });
 function generateToken(id) {
     const payload = { id };
     const secret = process.env.SECRET;
@@ -31,9 +31,7 @@ async function getUserFromToken(token) {
         throw new Error("SECRET environment variable is not defined");
     }
     const { id, ...rest } = jsonwebtoken_1.default.verify(token, secret);
-    console.log("Received ID:", id);
-    const user = await (0, controlers_1.getUserById)("users", "id", id);
-    console.log("User from token:", user);
+    const user = await (0, controlers_1.getUserById)(id);
     if (user) {
         return user;
     }

@@ -11,7 +11,6 @@ const updateUser = async (req, res, next) => {
         }
     }
     catch (error) {
-        console.log(error);
         error.name = "NoBodyData";
         return next(error);
     }
@@ -30,7 +29,6 @@ const updateUser = async (req, res, next) => {
         throw new Error("Access denied");
     }
     catch (error) {
-        console.log(error);
         error.name = "UpdateUserFailed";
         return next(error);
     }

@@ -10,8 +10,7 @@ const deleteUser = async (req, res, next) => {
         if (user.role !== "admin" && user.id !== userid) {
             const deletedUsers = await (0, controlers_1.deleteUserbyId)(userid);
             if (deletedUsers) {
-                res.status(200).json("User deleted successfully");
-                return;
+                return res.status(200).json("User deleted successfully");
             }
             throw new Error("Failed to delete user");
         }

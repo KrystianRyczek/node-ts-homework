@@ -12,10 +12,9 @@ export const deleteUser = async (
   const user: User = res.locals.user;
   try {
     if (user.role !== "admin" && user.id !== userid) {
-      const deletedUsers = await deleteUserbyId(userid);
+      const deletedUsers: User | null = await deleteUserbyId(userid);
       if (deletedUsers) {
-        res.status(200).json("User deleted successfully");
-        return;
+        return res.status(200).json("User deleted successfully");
       }
       throw new Error("Failed to delete user");
     }

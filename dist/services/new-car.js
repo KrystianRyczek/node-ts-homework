@@ -10,7 +10,6 @@ const addNewCar = async (req, res, next) => {
         }
     }
     catch (error) {
-        console.log(error);
         error.name = "BodyData";
         return next(error);
     }
@@ -21,13 +20,11 @@ const addNewCar = async (req, res, next) => {
             ownerId: currentUser === null || currentUser === void 0 ? void 0 : currentUser.id,
         });
         if (newCar) {
-            res.status(201).json("Car added successfully");
-            return;
+            return res.status(201).json("Car added successfully");
         }
         throw new Error("Failed to add car");
     }
     catch (error) {
-        console.log(error);
         error.name = "AddNewCarFailed";
         return next(error);
     }

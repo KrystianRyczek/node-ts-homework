@@ -5,10 +5,8 @@ const controlers_1 = require("../db/controlers");
 const getCarsList = async (req, res, next) => {
     try {
         const cars = await (0, controlers_1.getCars)();
-        console.log(cars);
         if (cars && cars.length > 0) {
-            res.status(200).json(cars);
-            return;
+            return res.status(200).json(cars);
         }
         throw new Error("No cars found");
     }
