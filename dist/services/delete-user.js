@@ -8,8 +8,8 @@ const deleteUser = async (req, res, next) => {
     const user = res.locals.user;
     try {
         if (user.role !== "admin" && user.id !== userid) {
-            const deletedUsers = await (0, controlers_1.deleteItem)("users", userid);
-            if (deletedUsers && deletedUsers.length > 0) {
+            const deletedUsers = await (0, controlers_1.deleteUserbyId)(userid);
+            if (deletedUsers) {
                 res.status(200).json("User deleted successfully");
                 return;
             }

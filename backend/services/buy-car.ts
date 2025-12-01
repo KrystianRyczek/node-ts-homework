@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import type { Car, EventLog, User } from "../types";
 import { buyEventEmiter } from "./sse";
-import { deleteItem, editItem, getItemByProperty } from "../db/controlers";
+import { deleteCarById, editUser, getCarById } from "../db/controlers";
 
 export const buyCar = async (
   req: Request,
@@ -11,18 +11,18 @@ export const buyCar = async (
   try {
     const carId: number = Number(req.params.id);
     const currentUser: User = res.locals.user;
-    const soldCar = (await getItemByProperty("cars", "id", carId)) as Car[];
-    if (soldCar.length > 0 && currentUser.balance >= soldCar[0].price) {
-      const updatedUser = await editItem("users", "id", currentUser.id, {
-        balance: currentUser.balance - soldCar[0].price,
+    const soldCar = (await getCarById(carId)) as Car | null;
+    if (soldCar && currentUser.balance >= soldCar.price) {
+      const updatedUser = await editUser(currentUser.id, {
+        balance: currentUser.balance - soldCar.price,
       });
-      if (updatedUser && updatedUser.length > 0) {
-        const deletedCars = await deleteItem("cars", carId);
-        if (deletedCars && deletedCars.length > 0) {
+      if (updatedUser) {
+        const deletedCars = await deleteCarById(carId);
+        if (deletedCars) {
           const newEvent: EventLog = {
-            carId: soldCar[0].id,
+            carId: soldCar.id,
             buyerId: currentUser.id,
-            model: soldCar[0].model,
+            model: soldCar.model,
             event: "sell",
           };
           buyEventEmiter.emit("buyCar", newEvent);
@@ -32,9 +32,9 @@ export const buyCar = async (
         throw new Error("Failed to purchase car");
       }
     }
-    throw new Error("Car not available or insufficient balance");
+    throw new Error("Car not available any more or insufficient balance");
   } catch (error: any) {
-    console.log(error);
+    console.log("buyCar", error.message);
     error.name = "BuyCarFailed";
     return next(error);
   }

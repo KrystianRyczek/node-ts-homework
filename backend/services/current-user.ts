@@ -1,5 +1,5 @@
 import type { User } from "../types";
-import { getItems } from "../db/controlers";
+import { getUsers } from "../db/controlers";
 import { Request, Response, NextFunction } from "express";
 
 export const getCurrentUser = async (
@@ -13,7 +13,7 @@ export const getCurrentUser = async (
     return;
   }
   try {
-    const users = await getItems("users");
+    const users = await getUsers();
     if (users && users.length > 0) {
       res.status(200).json(users);
       return;

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import type { User } from "../types";
-import { deleteItem } from "../db/controlers";
+import { deleteUserbyId } from "../db/controlers";
 // import { response } from "../util/response";
 
 export const deleteUser = async (
@@ -12,8 +12,8 @@ export const deleteUser = async (
   const user: User = res.locals.user;
   try {
     if (user.role !== "admin" && user.id !== userid) {
-      const deletedUsers = await deleteItem("users", userid);
-      if (deletedUsers && deletedUsers.length > 0) {
+      const deletedUsers = await deleteUserbyId(userid);
+      if (deletedUsers) {
         res.status(200).json("User deleted successfully");
         return;
       }

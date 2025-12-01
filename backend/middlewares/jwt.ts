@@ -4,10 +4,11 @@ import { User } from "../types";
 
 async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const token = parseCookies(req).token;
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized: No token provided" });
-  }
+
   try {
+    if (!token) {
+      throw new Error("No token provided");
+    }
     const user: User | null = await getUserFromToken(token);
     if (!user) {
       throw new Error("User not found");

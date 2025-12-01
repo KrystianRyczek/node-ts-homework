@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import type { User } from "../types";
 import { hashPassword } from "../util/auth";
-import { editItem } from "../db/controlers";
+import { editUser } from "../db/controlers";
 
 export const updateUser = async (
   req: Request,
@@ -20,11 +20,11 @@ export const updateUser = async (
   }
   try {
     if (currentUser.role === "admin" || currentUser.id === +req.params.id) {
-      const editedUser = await editItem("users", "id", +req.params.id, {
+      const editedUser = await editUser(+req.params.id, {
         username: req.body.username,
         password: hashPassword(req.body.password),
       });
-      if (editedUser && editedUser.length > 0) {
+      if (editedUser) {
         res.status(200).json("User updated successfully");
         return;
       }

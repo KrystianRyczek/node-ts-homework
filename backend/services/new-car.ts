@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import type { User } from "../types";
-import { addNewItem } from "../db/controlers";
+import { createNewCar } from "../db/controlers";
+import { create } from "domain";
 
 export const addNewCar = async (
   req: Request,
@@ -18,13 +19,13 @@ export const addNewCar = async (
     return next(error);
   }
   try {
-    const newCar = await addNewItem("cars", {
+    const newCar = await createNewCar({
       model: req.body.model,
       price: req.body.price,
-      ownerid: currentUser?.id,
+      ownerId: currentUser?.id,
     });
-    console.log("New car added:", newCar);
-    if (newCar && newCar.length > 0) {
+
+    if (newCar) {
       res.status(201).json("Car added successfully");
       return;
     }

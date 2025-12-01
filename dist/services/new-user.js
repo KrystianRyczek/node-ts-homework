@@ -17,12 +17,9 @@ const addNewUser = async (req, res, next) => {
         return next(error);
     }
     try {
-        const dbRespons = await (0, controlers_1.getItemByProperty)("users", "username", req.body.username);
-        if (dbRespons && dbRespons.length > 0) {
-            const user = dbRespons[0];
-            if (user) {
-                throw new Error("User name is taken!");
-            }
+        const user = await (0, controlers_1.getUserByName)(req.body.username);
+        if (user) {
+            throw new Error("User name is taken!");
         }
     }
     catch (error) {
@@ -33,7 +30,7 @@ const addNewUser = async (req, res, next) => {
     try {
         const password = (0, auth_1.hashPassword)(req.body.password);
         const newUser = { ...req.body, password };
-        await (0, controlers_1.addNewItem)("users", newUser);
+        await (0, controlers_1.createNewUser)(newUser);
         res.status(201).json("User created successfully");
     }
     catch (error) {

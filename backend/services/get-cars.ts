@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { getItems } from "../db/controlers";
+import { getCars } from "../db/controlers";
 
 export const getCarsList = async (
   req: Request,
@@ -7,7 +7,8 @@ export const getCarsList = async (
   next: NextFunction
 ) => {
   try {
-    const cars = await getItems("cars");
+    const cars = await getCars();
+    console.log(cars);
     if (cars && cars.length > 0) {
       res.status(200).json(cars);
       return;

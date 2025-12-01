@@ -4,7 +4,8 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import bcrypt from "bcrypt";
 dotenv.config({ path: "../.env" });
 import { Car, User } from "../types";
-import { getItemByProperty } from "../db/controlers";
+import { getUserById } from "../db/controlers";
+
 import { Request, Response, NextFunction } from "express";
 
 export function generateToken(id: string): string {
@@ -26,10 +27,12 @@ export async function getUserFromToken(token: string): Promise<User | null> {
     throw new Error("SECRET environment variable is not defined");
   }
   const { id, ...rest } = jwt.verify(token, secret) as { id: number };
-  const user = await getItemByProperty("users", "id", id);
+  console.log("Received ID:", id);
+  const user = await getUserById("users", "id", id);
 
+  console.log("User from token:", user);
   if (user) {
-    return user[0] as User;
+    return user;
   }
   return null;
 }

@@ -16,15 +16,15 @@ const updateCar = async (req, res, next) => {
         return next(error);
     }
     try {
-        const carToUpdate = (await (0, controlers_1.getItemByProperty)("cars", "id", +carId));
-        if (carToUpdate && carToUpdate.length > 0) {
+        const carToUpdate = (await (0, controlers_1.getCarById)(+carId));
+        if (carToUpdate) {
             if (currentUser.role === "admin" ||
-                currentUser.id === +carToUpdate[0].ownerid) {
-                const editedCar = await (0, controlers_1.editItem)("cars", "id", +carId, {
+                currentUser.id === +carToUpdate.ownerId) {
+                const editedCar = await (0, controlers_1.editCar)(+carId, {
                     model: req.body.model,
                     price: req.body.price,
                 });
-                if (editedCar && editedCar.length > 0) {
+                if (editedCar) {
                     res.status(200).json("Car updated successfully");
                     return;
                 }

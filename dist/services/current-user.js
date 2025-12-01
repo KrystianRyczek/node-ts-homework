@@ -9,7 +9,7 @@ const getCurrentUser = async (req, res, next) => {
         return;
     }
     try {
-        const users = await (0, controlers_1.getItems)("users");
+        const users = await (0, controlers_1.getUsers)();
         if (users && users.length > 0) {
             res.status(200).json(users);
             return;

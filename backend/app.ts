@@ -8,18 +8,19 @@ import authMiddleware from "./middlewares/jwt.js";
 export const app = express();
 app.use(express.json());
 
-app.use(express.static("../frontend"));
+app.use("/", express.static("../frontend"));
 app.use("/sse", sse);
 app.use("/api", usersRouter);
 app.use("/api", authMiddleware, authUsersRouter);
 app.use("/api", authMiddleware, authCarRouter);
 
 app.use((req: Request, res: Response) => {
+  console.log("404 Not Found:", req.path);
   res.status(404).json({ message: `Not found - ${req.path}` });
 });
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.log(err.name);
+  console.log("app error name", err.name);
   if (err.name === "ValidationError" || err.name === "BodyData") {
     return res.status(400).json({ serverErrorMessage: err.message });
   }
@@ -37,7 +38,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     err.name === "UpdateUserFailed" ||
     err.name === "DeleteUserFailed"
   ) {
-    return res.status(304).json({ serverErrorMessage: err.message });
+    return res.status(403).json({ serverErrorMessage: err.message });
   }
   if (err.name === "OcupatedUserName") {
     return res.status(409).json({ serverErrorMessage: err.message });

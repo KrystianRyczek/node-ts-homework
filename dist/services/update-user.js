@@ -17,11 +17,11 @@ const updateUser = async (req, res, next) => {
     }
     try {
         if (currentUser.role === "admin" || currentUser.id === +req.params.id) {
-            const editedUser = await (0, controlers_1.editItem)("users", "id", +req.params.id, {
+            const editedUser = await (0, controlers_1.editUser)(+req.params.id, {
                 username: req.body.username,
                 password: (0, auth_1.hashPassword)(req.body.password),
             });
-            if (editedUser && editedUser.length > 0) {
+            if (editedUser) {
                 res.status(200).json("User updated successfully");
                 return;
             }

@@ -1,85 +1,146 @@
 import sql from "./db";
 import { hashPassword } from "../util/auth";
 import { Car, User } from "../types";
+import { PrismaClient } from "@prisma/client";
 
-export const createUsersTable = async () => {
-  console.log("Creating USERS table not exists.");
-  console.log("Creating USERS table...");
-  await sql`CREATE TABLE IF NOT EXISTS USERS( id SERIAL PRIMARY KEY, username VARCHAR(100) NOT NULL, password VARCHAR(100) NOT NULL, role VARCHAR(10) DEFAULT 'user', balance FLOAT DEFAULT 10000);`;
-  const dbRespons = await sql`SELECT * FROM USERS;`;
-  if (dbRespons.length === 0) {
-    await sql`INSERT INTO USERS (username, password, role) VALUES ('admin', ${hashPassword(
-      process.env.ADMIN_PASSWORD || "admin123"
-    )}, 'admin');`;
+const prisma = new PrismaClient();
+
+export const createNewUser = async (newUser: {
+  [key: string]: string | number;
+}) => {
+  const user = await prisma.user.create({
+    data: {
+      username: newUser.username as string,
+      password: newUser.password as string,
+    },
+  });
+  if (user) {
+    return user;
   }
-};
-export const createCarsTable = async () => {
-  console.log("CARS table not exists.");
-  console.log("Creating CARS table...");
-  await sql`CREATE TABLE IF NOT EXISTS CARS( id SERIAL PRIMARY KEY, model VARCHAR(100) NOT NULL, price FLOAT NOT NULL, ownerId VARCHAR(100) );`;
+  return null;
 };
 
-export const addNewItem = async (
-  tableName: string,
-  item: { [key: string]: string | number }
-) => {
-  const propertysArr: string[] = Object.keys(item);
-  const addedItem: User[] | Car[] = await sql`INSERT INTO ${sql(
-    tableName
-  )} ${sql(item, propertysArr)} RETURNING *;`;
-  console.log("Added item:", addedItem);
-  if (addedItem.length > 0) {
-    return addedItem;
-  } else {
-    return null;
-  }
-};
-
-export const getItemByProperty = async (
-  tableName: string,
-  property: string,
-  value: string | number
-) => {
-  const item: User[] | Car[] = await sql`SELECT * FROM ${sql(
-    tableName
-  )} WHERE ${sql(property)} = ${value} ;`;
-  if (item.length > 0) {
+export const getUserByName = async (value: string | number) => {
+  const item = await prisma.user.findFirst({
+    where: {
+      username: {
+        equals: value as string,
+        mode: "insensitive",
+      },
+    },
+  });
+  if (item) {
     return item;
   }
   return null;
 };
 
-export const getItems = async (tableName: string) => {
-  const items: User[] | Car[] = await sql`SELECT * FROM ${sql(tableName)};`;
-  if (items.length > 0) {
-    return items as User[] | Car[];
-  }
-  return null;
-};
-
-export const editItem = async (
+export const getUserById = async (
   tableName: string,
-  propertyName: string,
-  propertyValue: string | number,
-  updatedItem: { [key: string]: string | number }
+  property: string,
+  value: string | number
 ) => {
-  const updatedItems: User[] | Car[] = await sql`UPDATE ${sql(
-    tableName
-  )} SET ${sql(updatedItem)} WHERE ${sql(
-    propertyName
-  )} = ${propertyValue} RETURNING *;`;
-  if (updatedItems.length > 0) {
-    return updatedItems as User[] | Car[];
+  const item = await prisma.user.findFirst({
+    where: {
+      id: Number(value),
+    },
+  });
+  if (item) {
+    return item;
   }
   return null;
 };
 
-export const deleteItem = async (tableName: string, itemId: number) => {
-  const deletedItems: User[] | Car[] = await sql`DELETE FROM ${sql(
-    tableName
-  )} WHERE id = ${itemId} RETURNING *;`;
-  if (deletedItems.length > 0) {
-    return deletedItems as User[] | Car[];
+export const getUsers = async () => {
+  const users = await prisma.user.findMany({});
+  if (users) {
+    return users;
+  }
+  return null;
+};
+
+export const editUser = async (userId: number, updatedItem: Partial<User>) => {
+  const updatedUser = await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: updatedItem,
+  });
+  if (updatedUser) {
+    return updatedUser;
+  }
+  return null;
+};
+
+export const deleteUserbyId = async (userID: number) => {
+  const deletedUser = await prisma.user.delete({
+    where: {
+      id: Number(userID),
+    },
+  });
+  if (deletedUser) {
+    return deletedUser;
+  }
+  return null;
+};
+
+export const getCarById = async (carID: number) => {
+  console.log("Fetching user by ID:", carID);
+  const car = await prisma.cars.findFirst({
+    where: {
+      id: Number(carID),
+    },
+  });
+  if (car) {
+    return car;
+  }
+  return null;
+};
+
+export const getCars = async () => {
+  const cars = await prisma.cars.findMany({});
+  if (cars) {
+    return cars;
+  }
+  return null;
+};
+export const createNewCar = async (newCar: {
+  [key: string]: string | number;
+}) => {
+  const createdCar = await prisma.cars.create({
+    data: {
+      model: newCar.model as string,
+      price: newCar.price as number,
+      ownerId: newCar.ownerId as number,
+    },
+  });
+  if (createdCar) {
+    return createdCar;
+  }
+  return null;
+};
+
+export const editCar = async (carId: number, car: Partial<Car>) => {
+  const updatedCar = await prisma.cars.update({
+    where: {
+      id: carId,
+    },
+    data: car,
+  });
+  if (updatedCar) {
+    return updatedCar;
+  }
+  return null;
+};
+
+export const deleteCarById = async (carId: number) => {
+  const deletedCar = await prisma.cars.delete({
+    where: {
+      id: Number(carId),
+    },
+  });
+  if (deletedCar) {
+    return deletedCar;
   }
   return null;
 };

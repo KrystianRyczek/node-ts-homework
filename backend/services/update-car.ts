@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import type { Car, User } from "../types";
-import { editItem, getItemByProperty } from "../db/controlers";
+import { editCar, getCarById } from "../db/controlers";
 
 export const updateCar = async (
   req: Request,
@@ -19,19 +19,17 @@ export const updateCar = async (
     return next(error);
   }
   try {
-    const carToUpdate = (await getItemByProperty("cars", "id", +carId)) as
-      | Car[]
-      | null;
-    if (carToUpdate && carToUpdate.length > 0) {
+    const carToUpdate = (await getCarById(+carId)) as Car | null;
+    if (carToUpdate) {
       if (
         currentUser.role === "admin" ||
-        currentUser.id === +carToUpdate[0].ownerid
+        currentUser.id === +carToUpdate.ownerId
       ) {
-        const editedCar = await editItem("cars", "id", +carId, {
+        const editedCar = await editCar(+carId, {
           model: req.body.model,
           price: req.body.price,
         });
-        if (editedCar && editedCar.length > 0) {
+        if (editedCar) {
           res.status(200).json("Car updated successfully");
           return;
         }

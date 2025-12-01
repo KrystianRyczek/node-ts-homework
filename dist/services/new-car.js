@@ -15,13 +15,12 @@ const addNewCar = async (req, res, next) => {
         return next(error);
     }
     try {
-        const newCar = await (0, controlers_1.addNewItem)("cars", {
+        const newCar = await (0, controlers_1.createNewCar)({
             model: req.body.model,
             price: req.body.price,
-            ownerid: currentUser === null || currentUser === void 0 ? void 0 : currentUser.id,
+            ownerId: currentUser === null || currentUser === void 0 ? void 0 : currentUser.id,
         });
-        console.log("New car added:", newCar);
-        if (newCar && newCar.length > 0) {
+        if (newCar) {
             res.status(201).json("Car added successfully");
             return;
         }

@@ -138,7 +138,7 @@ async function loadCars() {
                      <strong>ID:</strong> ${car.id} |
                      <strong>Model:</strong> ${car.model} |
                      <strong>Cena:</strong> ${car.price} |
-                     <strong>Właściciel:</strong> ${car.ownerid}
+                     <strong>Właściciel:</strong> ${car.ownerId}
                    </div>`;
         });
       }
@@ -260,6 +260,7 @@ function setupEventListeners() {
       const res = await fetch(`http://localhost:3000/api/cars/${carId}/buy`, {
         method: "POST",
       });
+      console.log(res);
       const data = await res.json();
       if (res.status === 200) {
         showMessage("Samochód zakupiony", "success");

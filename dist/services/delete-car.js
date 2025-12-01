@@ -6,11 +6,11 @@ const deleteCar = async (req, res, next) => {
     const user = res.locals.user;
     const carId = Number(req.params.id);
     try {
-        const carToDelete = (await (0, controlers_1.getItemByProperty)("cars", "id", carId));
-        if (carToDelete && carToDelete.length > 0) {
-            if (user.role !== "admin" && user.id !== carToDelete[0].ownerid) {
-                const deletedCars = await (0, controlers_1.deleteItem)("cars", carId);
-                if (deletedCars && deletedCars.length > 0) {
+        const carToDelete = await (0, controlers_1.getCarById)(carId);
+        if (carToDelete) {
+            if (user.role !== "admin" && user.id !== carToDelete.ownerId) {
+                const deletedCars = await (0, controlers_1.deleteCarById)(carId);
+                if (deletedCars) {
                     res.status(200).json("Car deleted successfully");
                     return;
                 }

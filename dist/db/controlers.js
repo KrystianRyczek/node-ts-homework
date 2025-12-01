@@ -1,68 +1,138 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteItem = exports.editItem = exports.getItems = exports.getItemByProperty = exports.addNewItem = exports.createCarsTable = exports.createUsersTable = void 0;
-const db_1 = __importDefault(require("./db"));
-const auth_1 = require("../util/auth");
-const createUsersTable = async () => {
-    console.log("Creating USERS table not exists.");
-    console.log("Creating USERS table...");
-    await (0, db_1.default) `CREATE TABLE IF NOT EXISTS USERS( id SERIAL PRIMARY KEY, username VARCHAR(100) NOT NULL, password VARCHAR(100) NOT NULL, role VARCHAR(10) DEFAULT 'user', balance FLOAT DEFAULT 10000);`;
-    const dbRespons = await (0, db_1.default) `SELECT * FROM USERS;`;
-    if (dbRespons.length === 0) {
-        await (0, db_1.default) `INSERT INTO USERS (username, password, role) VALUES ('admin', ${(0, auth_1.hashPassword)(process.env.ADMIN_PASSWORD || "admin123")}, 'admin');`;
+exports.deleteCarById = exports.editCar = exports.createNewCar = exports.getCars = exports.getCarById = exports.deleteUserbyId = exports.editUser = exports.getUsers = exports.getUserById = exports.getUserByName = exports.createNewUser = void 0;
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
+const createNewUser = async (newUser) => {
+    const user = await prisma.user.create({
+        data: {
+            username: newUser.username,
+            password: newUser.password,
+        },
+    });
+    if (user) {
+        return user;
     }
+    return null;
 };
-exports.createUsersTable = createUsersTable;
-const createCarsTable = async () => {
-    console.log("CARS table not exists.");
-    console.log("Creating CARS table...");
-    await (0, db_1.default) `CREATE TABLE IF NOT EXISTS CARS( id SERIAL PRIMARY KEY, model VARCHAR(100) NOT NULL, price FLOAT NOT NULL, ownerId VARCHAR(100) );`;
-};
-exports.createCarsTable = createCarsTable;
-const addNewItem = async (tableName, item) => {
-    const propertysArr = Object.keys(item);
-    const addedItem = await (0, db_1.default) `INSERT INTO ${(0, db_1.default)(tableName)} ${(0, db_1.default)(item, propertysArr)} RETURNING *;`;
-    console.log("Added item:", addedItem);
-    if (addedItem.length > 0) {
-        return addedItem;
-    }
-    else {
-        return null;
-    }
-};
-exports.addNewItem = addNewItem;
-const getItemByProperty = async (tableName, property, value) => {
-    const item = await (0, db_1.default) `SELECT * FROM ${(0, db_1.default)(tableName)} WHERE ${(0, db_1.default)(property)} = ${value} ;`;
-    if (item.length > 0) {
+exports.createNewUser = createNewUser;
+const getUserByName = async (value) => {
+    const item = await prisma.user.findFirst({
+        where: {
+            username: {
+                equals: value,
+                mode: "insensitive",
+            },
+        },
+    });
+    if (item) {
         return item;
     }
     return null;
 };
-exports.getItemByProperty = getItemByProperty;
-const getItems = async (tableName) => {
-    const items = await (0, db_1.default) `SELECT * FROM ${(0, db_1.default)(tableName)};`;
-    if (items.length > 0) {
-        return items;
+exports.getUserByName = getUserByName;
+const getUserById = async (tableName, property, value) => {
+    const item = await prisma.user.findFirst({
+        where: {
+            id: Number(value),
+        },
+    });
+    if (item) {
+        return item;
     }
     return null;
 };
-exports.getItems = getItems;
-const editItem = async (tableName, propertyName, propertyValue, updatedItem) => {
-    const updatedItems = await (0, db_1.default) `UPDATE ${(0, db_1.default)(tableName)} SET ${(0, db_1.default)(updatedItem)} WHERE ${(0, db_1.default)(propertyName)} = ${propertyValue} RETURNING *;`;
-    if (updatedItems.length > 0) {
-        return updatedItems;
+exports.getUserById = getUserById;
+const getUsers = async () => {
+    const users = await prisma.user.findMany({});
+    if (users) {
+        return users;
     }
     return null;
 };
-exports.editItem = editItem;
-const deleteItem = async (tableName, itemId) => {
-    const deletedItems = await (0, db_1.default) `DELETE FROM ${(0, db_1.default)(tableName)} WHERE id = ${itemId} RETURNING *;`;
-    if (deletedItems.length > 0) {
-        return deletedItems;
+exports.getUsers = getUsers;
+const editUser = async (userId, updatedItem) => {
+    const updatedUser = await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: updatedItem,
+    });
+    if (updatedUser) {
+        return updatedUser;
     }
     return null;
 };
-exports.deleteItem = deleteItem;
+exports.editUser = editUser;
+const deleteUserbyId = async (userID) => {
+    const deletedUser = await prisma.user.delete({
+        where: {
+            id: Number(userID),
+        },
+    });
+    if (deletedUser) {
+        return deletedUser;
+    }
+    return null;
+};
+exports.deleteUserbyId = deleteUserbyId;
+const getCarById = async (carID) => {
+    console.log("Fetching user by ID:", carID);
+    const car = await prisma.cars.findFirst({
+        where: {
+            id: Number(carID),
+        },
+    });
+    if (car) {
+        return car;
+    }
+    return null;
+};
+exports.getCarById = getCarById;
+const getCars = async () => {
+    const cars = await prisma.cars.findMany({});
+    if (cars) {
+        return cars;
+    }
+    return null;
+};
+exports.getCars = getCars;
+const createNewCar = async (newCar) => {
+    const createdCar = await prisma.cars.create({
+        data: {
+            model: newCar.model,
+            price: newCar.price,
+            ownerId: newCar.ownerId,
+        },
+    });
+    if (createdCar) {
+        return createdCar;
+    }
+    return null;
+};
+exports.createNewCar = createNewCar;
+const editCar = async (carId, car) => {
+    const updatedCar = await prisma.cars.update({
+        where: {
+            id: carId,
+        },
+        data: car,
+    });
+    if (updatedCar) {
+        return updatedCar;
+    }
+    return null;
+};
+exports.editCar = editCar;
+const deleteCarById = async (carId) => {
+    const deletedCar = await prisma.cars.delete({
+        where: {
+            id: Number(carId),
+        },
+    });
+    if (deletedCar) {
+        return deletedCar;
+    }
+    return null;
+};
+exports.deleteCarById = deleteCarById;

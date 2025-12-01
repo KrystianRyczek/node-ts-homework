@@ -13,16 +13,17 @@ const sse_1 = __importDefault(require("./routes/sse"));
 const jwt_js_1 = __importDefault(require("./middlewares/jwt.js"));
 exports.app = (0, express_1.default)();
 exports.app.use(express_1.default.json());
-exports.app.use(express_1.default.static("../frontend"));
+exports.app.use("/", express_1.default.static("../frontend"));
 exports.app.use("/sse", sse_1.default);
 exports.app.use("/api", users_1.default);
 exports.app.use("/api", jwt_js_1.default, authUsers_1.default);
 exports.app.use("/api", jwt_js_1.default, authCars_1.default);
 exports.app.use((req, res) => {
+    console.log("404 Not Found:", req.path);
     res.status(404).json({ message: `Not found - ${req.path}` });
 });
 exports.app.use((err, req, res, next) => {
-    console.log(err.name);
+    console.log("app error name", err.name);
     if (err.name === "ValidationError" || err.name === "BodyData") {
         return res.status(400).json({ serverErrorMessage: err.message });
     }
@@ -38,7 +39,7 @@ exports.app.use((err, req, res, next) => {
         err.name === "AddNewUserFailed" ||
         err.name === "UpdateUserFailed" ||
         err.name === "DeleteUserFailed") {
-        return res.status(304).json({ serverErrorMessage: err.message });
+        return res.status(403).json({ serverErrorMessage: err.message });
     }
     if (err.name === "OcupatedUserName") {
         return res.status(409).json({ serverErrorMessage: err.message });
